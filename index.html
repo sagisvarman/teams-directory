@@ -1,0 +1,213 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="color-scheme" content="light">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>SBP Team Directory</title>
+<style>
+:root{--bg:#fff;--ink:#111;--muted:#8a8a8a;--line:#ececec;--line2:#d9d9d9;--mark:#fff1a6}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{
+  margin:0;background:var(--bg);color:var(--ink);
+  font:16px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  padding:env(safe-area-inset-top) 20px calc(48px + env(safe-area-inset-bottom));
+}
+.wrap{max-width:680px;margin:0 auto}
+header{padding:40px 0 8px}
+h1{margin:0;font-size:1.25rem;font-weight:600;letter-spacing:-.01em}
+.sub{margin:4px 0 0;color:var(--muted);font-size:.85rem}
+.searchbar{position:sticky;top:0;z-index:5;padding:14px 0 6px;background:var(--bg)}
+.field{position:relative}
+.field svg{position:absolute;left:0;top:50%;transform:translateY(-50%);width:18px;height:18px;color:var(--muted);pointer-events:none}
+input[type=search]{
+  width:100%;font:inherit;font-size:1.15rem;color:var(--ink);
+  padding:14px 36px 14px 30px;border:0;border-bottom:1.5px solid var(--line2);
+  border-radius:0;background:transparent;outline:none;-webkit-appearance:none;appearance:none;
+}
+input[type=search]::placeholder{color:#b4b4b4}
+input[type=search]:focus{border-bottom-color:var(--ink)}
+input[type=search]::-webkit-search-cancel-button{display:none}
+.clear{
+  position:absolute;right:0;top:50%;transform:translateY(-50%);
+  width:28px;height:28px;border:0;border-radius:50%;background:transparent;color:var(--muted);
+  font-size:20px;line-height:1;cursor:pointer;display:none;
+}
+.clear:hover{color:var(--ink)}
+.clear.show{display:block}
+.status{margin:10px 0 0;color:var(--muted);font-size:.8rem;min-height:1.2em}
+.list{margin-top:4px}
+.card{padding:20px 0;border-bottom:1px solid var(--line)}
+.card:last-child{border-bottom:0}
+.title{font-weight:600;font-size:1rem;margin:0 0 12px}
+.label{font-size:.68rem;font-weight:500;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin:14px 0 7px}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{
+  font:inherit;font-size:.85rem;cursor:pointer;color:var(--ink);background:#fff;
+  border:1px solid var(--line2);border-radius:6px;padding:3px 10px;
+}
+.chip:hover{border-color:var(--ink)}
+.chip.hit{border-color:var(--ink);background:#f6f6f6}
+.alum{
+  display:block;width:100%;text-align:left;font:inherit;font-size:.85rem;cursor:pointer;
+  border:0;background:none;color:#555;padding:3px 0;
+}
+.alum:hover{color:var(--ink);text-decoration:underline}
+.none{color:var(--muted);font-size:.85rem}
+.tag{display:block;font-size:.68rem;font-weight:500;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:6px}
+mark{background:var(--mark);color:inherit;border-radius:2px;padding:0}
+.empty{text-align:center;color:var(--muted);padding:56px 10px;font-size:.9rem}
+.empty b{display:block;color:var(--ink);font-weight:600;font-size:1rem;margin-bottom:4px}
+footer{margin-top:32px;text-align:center;color:#b0b0b0;font-size:.75rem}
+kbd{font:inherit;font-size:.7rem;border:1px solid var(--line2);border-radius:4px;padding:0 5px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>SBP Team Directory</h1>
+    <p class="sub" id="counts"></p>
+  </header>
+
+  <div class="searchbar">
+    <div class="field">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+      <input id="q" type="search" placeholder="Search a team, school or alumni name" autocomplete="off" autocapitalize="off" spellcheck="false" enterkeyhint="search" autofocus>
+      <button class="clear" id="clear" aria-label="Clear search">&times;</button>
+    </div>
+    <div class="status" id="status"></div>
+  </div>
+
+  <main class="list" id="list"></main>
+  <footer>Tap any name to search it &middot; press <kbd>/</kbd> to jump to search</footer>
+</div>
+
+<script>
+const DATA = {"schools": [{"school": "Sekolah Sultan Alam Shah (SAS)", "code": "SAS", "teams": ["SAS", "ASAS"], "alumni": ["Alumni Sekolah Alam Shah (ASAS)"]}, {"school": "Kolej Tunku Kursiah (TKC)", "code": "TKC", "teams": ["TKC", "KUDOS AS"], "alumni": ["Malay Girls College-Tunku Khursiah College Old Girls Association (TKCOGA)"]}, {"school": "SM Sains Tuanku Munawir (SASER)", "code": "SASER", "teams": ["SASER", "SASEROBA"], "alumni": ["Pertubuhan Alumni SASER (SASEROBA)"]}, {"school": "Sekolah Seri Puteri (SSP)", "code": "SSP", "teams": ["SSP", "PUTERI"], "alumni": ["Persatuan Alumni Sekolah Seri Puteri Malaysia (PUTERI)"]}, {"school": "SBP Integrasi Gombak (INTEGOMB)", "code": "INTEGOMB", "teams": ["INTEGOMB", "FLYERZ", "GIBSA", "FEBA"], "alumni": ["Gombak Integrated Boarding School Alumni Association (INTEGOMBA)"]}, {"school": "SM Sains Kuala Terengganu (SESTER)", "code": "SESTER", "teams": [], "alumni": []}, {"school": "SM Sains Tuanku Aishah Rohani (SGS)", "code": "SGS", "teams": [], "alumni": []}, {"school": "Sekolah Tun Fatimah (STF)", "code": "STF", "teams": ["STF", "SRIKANDI"], "alumni": ["Persatuan Bekas Pelajar Sekolah Tun Fatimah (SRIKANDI)"]}, {"school": "SM Sains Kota Tinggi (SAKTI)", "code": "SAKTI", "teams": [], "alumni": ["Persatuan Alumni Sekolah Menengah Sains Kota Tinggi (PRASASSTI)"]}, {"school": "SBP Integrasi Kuantan (INTEK)", "code": "INTEK", "teams": [], "alumni": []}, {"school": "SM Sains Alam Shah (ASIS)", "code": "ASIS", "teams": ["ASIS", "OASIS"], "alumni": ["Pertubuhan Alumni Sekolah Menengah Sains Alam Shah (OASIS)"]}, {"school": "SM Sains Hulu Selangor (SEMASHUR)", "code": "SEMASHUR", "teams": ["SEMASHUR", "ASHURA", "ASHURA BLAZES"], "alumni": ["Persatuan Alumni Sekolah Menengah Sains Hulu Selangor (ASHURA)"]}, {"school": "Sekolah Menengah Sains Selangor (SMSS)", "code": "SMSS", "teams": ["SMSS", "SMSS SPARKS", "SMSSOB"], "alumni": ["Alumni Sekolah Menengah Sains Selangor (Alumni SMSS)"]}, {"school": "Malay College Kuala Kangsar (MCKK)", "code": "MCKK", "teams": ["KOLEQ", "MCKK"], "alumni": ["Malay College Old Boys Association (MCOBA)"]}, {"school": "SM Agama Persekutuan Kajang (SMAP KAJANG)", "code": "SMAP KAJANG", "teams": [], "alumni": []}, {"school": "Sekolah Berasrama Penuh Integrasi Batu Rakit (BRAINS)", "code": "BRAINS", "teams": [], "alumni": []}, {"school": "SBP Integrasi Rawang (SEPINTAR)", "code": "SEPINTAR", "teams": ["SEPINTAR", "AIRA"], "alumni": []}, {"school": "Kolej Islam Sultan Alam Shah (KISAS)", "code": "KISAS", "teams": [], "alumni": []}, {"school": "SM Sains Sultan Haji Ahmad Shah, Kuantan (SEMSAS)", "code": "SEMSAS", "teams": ["SEMSAS", "EXSAS WARHAWKS", "SHAH ORION"], "alumni": ["Persatuan Bekas Pelajar Sekolah Sains Sultan Haji Ahmad Shah Pekan (Alumni SHAH PEKAN)", "Persatuan Bekas Pelajar SEMSAS/Ex-Students SEMSAS Association Kuantan, Pahang (EXSAS)"]}, {"school": "SM Sains Kuching Utara (SAKURA)", "code": "SAKURA", "teams": [], "alumni": []}, {"school": "SM Sains Kuala Selangor (KUSESS)", "code": "KUSESS", "teams": ["KUSESS"], "alumni": ["Persatuan Alumni Sekolah Menengah Sains Kuala Selangor (KUASA)"]}, {"school": "SM Sains Muar (SAMURA)", "code": "SAMURA", "teams": [], "alumni": ["Persatuan Alumni Sekolah Menengah Sains, Muar, Johor (Alumni SAMURA)"]}, {"school": "SM Sains Seri Puteri (SESERI)", "code": "SESERI", "teams": [], "alumni": []}, {"school": "SBP Integrasi Kubang Pasu (I-KUPS)", "code": "I-KUPS", "teams": ["IKUPS", "OXSIKA"], "alumni": []}, {"school": "SM Sains Tengku Abdullah (SEMESTA)", "code": "SEMESTA", "teams": ["SEMESTA", "ASTA"], "alumni": ["Persatuan Bekas Pelajar Sekolah Menengah Sains Tengku Abdullah (ASTA)"]}, {"school": "SM Agama Persekutuan Bentong (SUPERB) (SUPER OB)", "code": "SUPERB", "teams": ["SUPERB", "SUPER OB", "RAZHES"], "alumni": []}, {"school": "SM Sains Muzaffar Syah (MOZAC)", "code": "MOZAC", "teams": ["MOZAC", "EXMOZAC", "EX-MOZAC"], "alumni": []}, {"school": "Maktab Tentera Di Raja (MTD)", "code": "MTD", "teams": ["MTD", "OPA"], "alumni": []}, {"school": "SM Sains Tengku Muhammad Faris Petra (FARIS PETRA)", "code": "FARIS PETRA", "teams": ["FARIS", "FPETRA", "FPETRA V", "XFP"], "alumni": ["Alumni Faris Petra (FARIS PETRA)"]}, {"school": "SM Sains Sultan Mahmud (SESMA)", "code": "SESMA", "teams": ["SESMA", "SESMA OG"], "alumni": ["Persatuan Bekas Pelajar Sekolah Menengah Sains Sultan Mahmud (MySESMA)"]}, {"school": "Sekolah Tuanku Abdul Rahman (STAR)", "code": "STAR", "teams": ["STAROBA", "STAR", "OLDSTARS"], "alumni": ["Sekolah Tuanku Abdul Rahman Old Boys Association (STAROBA)"]}, {"school": "SM Agama Persekutuan Labu (SMAP LABU)", "code": "SMAP LABU", "teams": ["SMAPL", "IKMAL"], "alumni": ["Pertubuhan Alumni Sekolah Menengah Agama Persekutuan Labu (IKMAL)"]}, {"school": "SM Sains Tapah (SESTA)", "code": "SESTA", "teams": [], "alumni": []}, {"school": "SM Sains Rembau (SEMESRA)", "code": "SEMESRA", "teams": [], "alumni": []}, {"school": "SM Sains Tuanku Jaafar (STJ)", "code": "STJ", "teams": ["STJ", "PRESSTIJ"], "alumni": ["Persatuan Alumni Sekolah Menengah Sains Tuanku Jaafar (PRESSTiJ)"]}, {"school": "SM Sains Teluk Intan (SEMESTI)", "code": "SEMESTI", "teams": ["SEMESTI", "ASTI SONICS", "ASTI"], "alumni": ["Alumni Sekolah Sains Teluk Intan (ASTI)"]}, {"school": "SBP Integrasi Jempol (INTEJ)", "code": "INTEJ", "teams": ["INTEJ", "PEARL WOLVES"], "alumni": []}, {"school": "Sekolah Dato' Abdul Razak (SDAR)", "code": "SDAR", "teams": ["SDAR", "RADS", "SDAR X-WINGS", "XWINGS"], "alumni": ["Persatuan Bekas Pelajar Sekolah Dato' Abdul Razak (SDARA)"]}, {"school": "SM Sains Batu Pahat (SEHEBAT)", "code": "SEHEBAT", "teams": [], "alumni": []}, {"school": "SBP Integrasi Sabak Bernam (INTESABER)", "code": "INTESABER", "teams": ["INTESABER", "ALTRASABER"], "alumni": []}, {"school": "Sekolah Menengah Sains Jeli (JESS)", "code": "JESS", "teams": [], "alumni": []}, {"school": "SM Sains Sultan Mohammad Jiwa (MAD JIWA)", "code": "MAD JIWA", "teams": [], "alumni": []}, {"school": "SM Sains Kubang Pasu (KUPSIS)", "code": "KUPSIS", "teams": [], "alumni": []}, {"school": "SM Sultan Abdul Halim (SMSAH)", "code": "SMSAH", "teams": ["SMSAH", "JENAN", "JENAN ESTATICS"], "alumni": ["Persatuan Alumni Sekolah Menengah Sultan Abdul Halim, Jitra, Kedah (Alumni SMSAH)"]}, {"school": "SBP Integrasi Selandar (SISME)", "code": "SISME", "teams": ["SISME", "EXSEL"], "alumni": ["Alumni Sekolah Berasrama Penuh Integrasi, Selandar, Melaka (EXSEL)"]}, {"school": "SM Sains Raja Tun Azlan Shah (SERATAS)", "code": "SERATAS", "teams": [], "alumni": ["Persatuan Alumni Sekolah Menengah Sains Raja Tun Azlan Shah (SERATAS Alumni)"]}, {"school": "SBP Integrasi Gopeng (I-GOP)", "code": "I-GOP", "teams": [], "alumni": []}, {"school": "SBP Integrasi Tun Abdul Razak (INSTAR)", "code": "INSTAR", "teams": [], "alumni": []}, {"school": "SM Sains Kepala Batas (SAKBA)", "code": "SAKBA", "teams": [], "alumni": []}, {"school": "SM Sains Hulu Terengganu (SAHUT)", "code": "SAHUT", "teams": ["SAHUT", "XPRIMUS"], "alumni": []}, {"school": "SM Sains Setiu (SAIS)", "code": "SAIS", "teams": [], "alumni": []}, {"school": "SM Sains Pasir Puteh (SCIPP)", "code": "SCIPP", "teams": ["HUNTOO", "HOOPAHOLICS"], "alumni": ["Pertubuhan Alumni Sains Pasir Puteh (PASPP)"]}, {"school": "SM Sains Tuanku Syed Putra (SYED PUTERA)", "code": "SYED PUTERA", "teams": ["SYED PUTERA", "ASPUTRA"], "alumni": ["Alumni Sekolah Menengah Sains Tuanku Syed Putra (ASPUTRA)"]}, {"school": "SM Sains Gua Musang (GUAMSS)", "code": "GUAMSS", "teams": [], "alumni": []}, {"school": "SM Sains Bagan Datoh (SABDA)", "code": "SABDA", "teams": ["SABDA", "ABADIS BLITZ"], "alumni": []}, {"school": "SM Sains Pokok Sena (SAINA)", "code": "SAINA", "teams": ["SAINA", "SAINA JENGKINGS"], "alumni": ["Persatuan Alumni Sekolah Menengah Sains Pokok Sena Kedah (Alumni SAINA)"]}, {"school": "SM Sains Banting (BASIS)", "code": "BASIS", "teams": [], "alumni": []}, {"school": "Alumni SM Sains Tun Syed Sheh Shahabudin (ALSPEN)", "code": "ALSPEN", "teams": ["TUN SYED", "ALSPEN"], "alumni": ["Alumni SM Sains Tun Syed Sheh Shahabudin (ALSPEN)"]}, {"school": "Sekolah Menengah Sains Miri(SAINSRI)", "code": "SAINSRI", "teams": [], "alumni": []}, {"school": "Sekolah Menengah Sains Segamat (SESS)", "code": "SESS", "teams": [], "alumni": []}, {"school": "Sekolah Menengah Sains Kuching (SAINSKU)", "code": "SAINSKU", "teams": [], "alumni": []}, {"school": "Sekolah Menengah Sains Dungun (SMSD)", "code": "SMSD", "teams": ["SMSD", "SHARKX", "EXSEMESDIANS", "EXSHARKS", "SHARKX V"], "alumni": ["Persatuan Bekas Pelajar Sekolah Menengah Sains Dungun (EXSEMESDIANS)"]}, {"school": "Sekolah Menengah Sains Sultan Iskandar (SMSSI)", "code": "SMSSI", "teams": ["ISKANDAR", "X-BHAWKS", "XBHAWKS"], "alumni": []}, {"school": "Sekolah Menengah Sains Machang (SMACH)", "code": "SMACH", "teams": ["SMACH", "SMACHIAN", "SMACH RAVENS"], "alumni": ["Persatuan Bekas Pelajar Sekolah Menengah Sains Machang (SMACHIAN ALUMNI)"]}, {"school": "Sekolah Menengah Sains Johor (SENJO)", "code": "SENJO", "teams": ["SMSJ", "SAJOHA", "SENJO"], "alumni": ["Persatuan Alumni Sekolah Menengah Sains Johor Kluang Johor (SAJOHA)"]}, {"school": "Sekolah Menengah Agama Persekutuan Kajang(SMAPK)", "code": "SMAPK", "teams": ["SMAPK", "FISSKA"], "alumni": ["Pertubuhan Alumni Sekolah Menengah Agama Persekutuan Kajang (AnNadi)"]}, {"school": "Sekolah Menengah Sains Sultan Mohamad Jiwa (SSMJ)", "code": "SSMJ", "teams": ["SSMJ", "ASSAK"], "alumni": ["Persatuan Alumni Sekolah Menengah Sains Sultan Mohamad Jiwa Sg Petani (ASSAK)"]}], "alumniOnly": [{"alumni": "Persatuan Alumni Kolej Islam Klang Malaysia (ALKIS)", "short": "ALKIS"}, {"alumni": "Persatuan Alumni SBP Integrasi Temerloh (AITEM)", "short": "AITEM"}]};
+
+const esc = s => s.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const fold = s => s.normalize('NFKD').toLowerCase();
+const norm = s => fold(s).replace(/[^a-z0-9]/g,'');
+const words = s => fold(s).split(/[^a-z0-9]+/).filter(Boolean);
+const reEsc = c => c.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
+
+// One record per school, plus one per alumni group that isn't linked to a school.
+const records = [
+  ...DATA.schools.map(s => ({kind:'school', title:s.school, code:s.code, teams:s.teams, alumni:s.alumni})),
+  ...DATA.alumniOnly.map(a => ({kind:'alumni', title:a.alumni, code:a.short, teams:[], alumni:[]}))
+];
+records.forEach(r => {
+  r.entries = [
+    {t:'school', text:r.title, w:r.kind==='school'?88:96},
+    ...(r.code ? [{t:'code', text:r.code, w:100}] : []),
+    ...r.teams.map(x => ({t:'team', text:x, w:100})),
+    ...r.alumni.map(x => ({t:'alumni', text:x, w:94}))
+  ];
+  r.hay = norm(r.entries.map(e => e.text).join(' '));
+  r.entries.forEach(e => { e.n = norm(e.text); e.words = words(e.text); });
+});
+
+const totalTeams = DATA.schools.reduce((n,s)=>n+s.teams.length,0);
+const totalAlumni = DATA.schools.reduce((n,s)=>n+s.alumni.length,0) + DATA.alumniOnly.length;
+document.getElementById('counts').textContent =
+  `${DATA.schools.length} schools · ${totalTeams} team names · ${totalAlumni} alumni groups`;
+
+function score(r, qc, qw){
+  let best = 0;
+  for(const e of r.entries){
+    let s = 0;
+    if(e.n === qc) s = 100;
+    else if(e.words.some(w => norm(w).startsWith(qc)) || e.n.startsWith(qc)) s = 75;
+    else if(e.n.includes(qc)) s = 55;
+    else if(qw.length > 1 && qw.every(w => e.n.includes(w))) s = 45;
+    if(s) best = Math.max(best, s * e.w / 100);
+  }
+  if(!best && qw.length > 1 && qw.every(w => r.hay.includes(w))) best = 25;
+  return best;
+}
+
+function highlighter(q){
+  const qc = norm(q), qw = words(q);
+  if(!qc) return t => esc(t);
+  const pat = s => [...s].map(reEsc).join('[^a-z0-9]*');
+  const parts = [pat(qc), ...qw.map(pat)];
+  const re = new RegExp(parts.join('|'), 'gi');
+  return t => {
+    let out = '', last = 0, m;
+    re.lastIndex = 0;
+    while((m = re.exec(t)) && m[0]){
+      out += esc(t.slice(last, m.index)) + '<mark>' + esc(m[0]) + '</mark>';
+      last = m.index + m[0].length;
+    }
+    return out + esc(t.slice(last));
+  };
+}
+
+function card(r, hl, qc, isTop){
+  const isHit = txt => qc && norm(txt).includes(qc);
+  let h = `<article class="card${isTop?' top':''}">`;
+  if(r.kind === 'alumni'){
+    h += `<span class="tag">Alumni group</span>`;
+    h += `<h2 class="title">${hl(r.title)}</h2>`;
+    h += `<div class="none">Not linked to a school in your sheet yet.</div>`;
+  } else {
+    h += `<h2 class="title">${hl(r.title)}</h2>`;
+    h += `<div class="label">Team names</div>`;
+    if(r.teams.length){
+      h += `<div class="chips">` + r.teams.map(t =>
+        `<button class="chip${isHit(t)?' hit':''}" data-q="${esc(t)}">${hl(t)}</button>`).join('') + `</div>`;
+    } else {
+      h += `<div class="none">No team names recorded</div>`;
+    }
+    if(r.alumni.length){
+      h += `<div class="label">Alumni</div>` + r.alumni.map(a =>
+        `<button class="alum" data-q="${esc(a)}">${hl(a)}</button>`).join('');
+    }
+  }
+  return h + `</article>`;
+}
+
+const $q = document.getElementById('q'), $list = document.getElementById('list'),
+      $status = document.getElementById('status'), $clear = document.getElementById('clear');
+
+function render(){
+  const q = $q.value.trim();
+  $clear.classList.toggle('show', !!$q.value);
+  const qc = norm(q), qw = words(q);
+  let rows;
+  if(!qc){
+    rows = [...records].sort((a,b) => (a.kind===b.kind ? 0 : a.kind==='school' ? -1 : 1) || a.title.localeCompare(b.title));
+    $status.textContent = 'Showing everything, A–Z';
+  } else {
+    rows = records.map(r => ({r, s:score(r, qc, qw)})).filter(x => x.s > 0)
+      .sort((a,b) => b.s - a.s || a.r.title.localeCompare(b.r.title)).map(x => x.r);
+    $status.textContent = rows.length ? `${rows.length} match${rows.length>1?'es':''}` : '';
+  }
+  if(!rows.length){
+    $list.innerHTML = `<div class="empty"><b>No match for “${esc(q)}”</b>Try a shorter bit of the name, or the school code.</div>`;
+    return;
+  }
+  const hl = highlighter(q);
+  $list.innerHTML = rows.map((r,i) => card(r, hl, qc, !!qc && i===0)).join('');
+  try{ history.replaceState(null,'', q ? '#q='+encodeURIComponent(q) : location.pathname + location.search); }catch(e){}
+}
+
+$q.addEventListener('input', render);
+$clear.addEventListener('click', () => { $q.value=''; render(); $q.focus(); });
+$list.addEventListener('click', e => {
+  const b = e.target.closest('[data-q]');
+  if(!b) return;
+  $q.value = b.dataset.q; render(); window.scrollTo({top:0,behavior:'smooth'});
+});
+document.addEventListener('keydown', e => {
+  if(e.key === '/' && document.activeElement !== $q){ e.preventDefault(); $q.focus(); $q.select(); }
+  else if(e.key === 'Escape' && $q.value){ $q.value=''; render(); }
+});
+
+const m = location.hash.match(/^#q=(.*)$/);
+if(m){ try{ $q.value = decodeURIComponent(m[1]); }catch(e){} }
+render();
+</script>
+</body>
+</html>
