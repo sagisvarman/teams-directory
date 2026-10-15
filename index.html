@@ -3,84 +3,148 @@
 <head>
 <meta charset="utf-8">
 <meta name="color-scheme" content="light">
+<meta name="theme-color" content="#ffffff">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>SBP Team Directory</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%23111'/%3E%3Ccircle cx='15' cy='15' r='6' fill='none' stroke='%23fff' stroke-width='3'/%3E%3Cpath d='M20 20l6 6' stroke='%23fff' stroke-width='3' stroke-linecap='round'/%3E%3C/svg%3E">
 <style>
-:root{--bg:#fff;--ink:#111;--muted:#8a8a8a;--line:#ececec;--line2:#d9d9d9;--mark:#fff1a6}
-*{box-sizing:border-box}
-html{-webkit-text-size-adjust:100%}
+:root{
+  --ink:#0b0b0c; --soft:#4a4a4f; --mute:#9a9aa0; --faint:#c9c9ce; --line:#efeff1;
+  --ease:cubic-bezier(.2,.7,.2,1);
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html{-webkit-text-size-adjust:100%;scroll-behavior:smooth}
 body{
-  margin:0;background:var(--bg);color:var(--ink);
-  font:16px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
-  padding:env(safe-area-inset-top) 20px calc(48px + env(safe-area-inset-bottom));
+  margin:0;background:#fff;color:var(--ink);
+  font-family:"Inter","SF Pro Display",system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  font-feature-settings:"ss01","cv11","tnum";
+  -webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;
+  padding:0 clamp(20px,5vw,48px) calc(80px + env(safe-area-inset-bottom));
 }
-.wrap{max-width:680px;margin:0 auto}
-header{padding:40px 0 8px}
-h1{margin:0;font-size:1.25rem;font-weight:600;letter-spacing:-.01em}
-.sub{margin:4px 0 0;color:var(--muted);font-size:.85rem}
-.searchbar{position:sticky;top:0;z-index:5;padding:14px 0 6px;background:var(--bg)}
+.wrap{max-width:900px;margin:0 auto}
+button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:pointer;text-align:left}
+
+/* top bar */
+.bar{display:flex;justify-content:space-between;align-items:center;padding:calc(22px + env(safe-area-inset-top)) 0 0;
+  font-size:.8rem;letter-spacing:.02em;color:var(--mute)}
+.mark{display:flex;align-items:center;gap:8px;color:var(--ink);font-weight:600;letter-spacing:-.01em}
+.mark i{width:8px;height:8px;border-radius:50%;background:var(--ink);display:block}
+
+/* hero (collapses once you type) */
+.hero{overflow:hidden;max-height:420px;opacity:1;
+  transition:max-height .7s var(--ease),opacity .45s ease,margin .7s var(--ease);margin:clamp(40px,12vh,110px) 0 clamp(20px,4vh,40px)}
+.hero h1{margin:0;font-size:clamp(2.6rem,9.5vw,5.2rem);line-height:1;font-weight:650;letter-spacing:-.055em}
+.hero h1 span{color:var(--faint)}
+body.q .hero{max-height:0;opacity:0;margin-top:22px;margin-bottom:0}
+
+/* search */
+.search{position:sticky;top:0;z-index:10;padding:10px 0 0;
+  background:rgba(255,255,255,.86);-webkit-backdrop-filter:saturate(1.6) blur(14px);backdrop-filter:saturate(1.6) blur(14px)}
 .field{position:relative}
-.field svg{position:absolute;left:0;top:50%;transform:translateY(-50%);width:18px;height:18px;color:var(--muted);pointer-events:none}
-input[type=search]{
-  width:100%;font:inherit;font-size:1.15rem;color:var(--ink);
-  padding:14px 36px 14px 30px;border:0;border-bottom:1.5px solid var(--line2);
-  border-radius:0;background:transparent;outline:none;-webkit-appearance:none;appearance:none;
+input{
+  width:100%;border:0;outline:0;background:transparent;border-radius:0;color:var(--ink);
+  font:inherit;font-weight:500;font-size:clamp(1.55rem,5.4vw,2.6rem);letter-spacing:-.04em;
+  padding:14px 44px 16px 0;-webkit-appearance:none;appearance:none;
 }
-input[type=search]::placeholder{color:#b4b4b4}
-input[type=search]:focus{border-bottom-color:var(--ink)}
-input[type=search]::-webkit-search-cancel-button{display:none}
-.clear{
-  position:absolute;right:0;top:50%;transform:translateY(-50%);
-  width:28px;height:28px;border:0;border-radius:50%;background:transparent;color:var(--muted);
-  font-size:20px;line-height:1;cursor:pointer;display:none;
+input::placeholder{color:var(--faint);transition:color .3s}
+input:focus::placeholder{color:#e1e1e5}
+input::-webkit-search-cancel-button{display:none}
+.rule{height:2px;background:var(--line);position:relative}
+.rule::after{content:"";position:absolute;inset:0;background:var(--ink);transform:scaleX(0);transform-origin:left;
+  transition:transform .6s var(--ease)}
+.field:focus-within + .rule::after,body.q .rule::after{transform:scaleX(1)}
+.clear{position:absolute;right:0;top:calc(50% - 2px);transform:translateY(-50%) scale(.8);width:34px;height:34px;border-radius:50%;
+  background:var(--line);color:var(--soft);font-size:18px;line-height:34px;text-align:center;
+  opacity:0;pointer-events:none;transition:opacity .25s,transform .35s var(--ease),background .2s}
+.clear.show{opacity:1;pointer-events:auto;transform:translateY(-50%) scale(1)}
+.clear:hover{background:#e4e4e8}
+
+/* helper line */
+.meta{display:flex;justify-content:space-between;align-items:center;min-height:28px;margin-top:14px;font-size:.8rem;color:var(--mute)}
+.meta b{font-weight:500;color:var(--soft)}
+.link{color:var(--mute);transition:color .2s;text-decoration:underline;text-decoration-color:var(--faint);text-underline-offset:3px}
+.link:hover{color:var(--ink);text-decoration-color:var(--ink)}
+
+/* suggestions */
+.try{display:flex;flex-wrap:wrap;gap:6px 18px;align-items:baseline;margin-top:10px;font-size:1rem;color:var(--mute);
+  transition:opacity .4s,max-height .5s var(--ease);max-height:120px;overflow:hidden}
+body.q .try,body.browse .try{opacity:0;max-height:0;margin-top:0}
+.try button{color:var(--ink);font-weight:500;letter-spacing:-.02em;transition:opacity .2s}
+.try button:hover{opacity:.45}
+
+/* results */
+.list{margin-top:6px}
+.res{padding:clamp(26px,4.5vw,44px) 0;border-top:1px solid var(--line)}
+.res:first-child{border-top:0}
+.name{margin:0;font-weight:620;letter-spacing:-.045em;line-height:1.04;font-size:clamp(1.7rem,6vw,3rem)}
+.res.top .name{font-size:clamp(2.2rem,8.4vw,4.6rem);letter-spacing:-.055em}
+.name .code{color:var(--faint);font-weight:500}
+.teams{display:flex;flex-wrap:wrap;gap:4px 0;margin:clamp(12px,2vw,20px) 0 0;
+  font-size:clamp(1.1rem,3.4vw,1.6rem);font-weight:500;letter-spacing:-.03em;line-height:1.25}
+.res.top .teams{font-size:clamp(1.3rem,4.2vw,2rem)}
+.teams button{color:var(--soft);transition:color .2s}
+.teams button:not(:last-child)::after{content:"/";color:var(--faint);margin:0 .5em;font-weight:400}
+.teams button:hover{color:var(--ink)}
+.teams .none{color:var(--faint);font-size:.9em;font-weight:400}
+.alumni{margin-top:clamp(12px,2vw,18px);display:flex;flex-direction:column;gap:2px}
+.alumni small{font-size:.68rem;letter-spacing:.12em;text-transform:uppercase;color:var(--mute);margin-bottom:4px}
+.alumni button{font-size:.92rem;color:var(--mute);line-height:1.45;transition:color .2s;max-width:640px}
+.alumni button:hover{color:var(--ink)}
+.kicker{display:block;font-size:.68rem;letter-spacing:.12em;text-transform:uppercase;color:var(--mute);margin-bottom:10px}
+.note{margin-top:12px;color:var(--mute);font-size:.9rem}
+
+/* compact list (browse all) */
+.compact .res{padding:14px 0}
+.compact .name{font-size:clamp(1.15rem,3.6vw,1.5rem);letter-spacing:-.035em}
+.compact .teams{margin-top:4px;font-size:.95rem;color:var(--mute)}
+.compact .alumni{display:none}
+
+/* highlight */
+mark{background:linear-gradient(transparent 58%,#ffe46b 58%);color:inherit;padding:0}
+
+/* empty */
+.empty{padding:clamp(40px,10vh,90px) 0}
+.empty h2{margin:0;font-weight:620;letter-spacing:-.05em;font-size:clamp(1.8rem,6.5vw,3.2rem);line-height:1.05}
+.empty h2 span{color:var(--faint)}
+.empty p{margin:14px 0 0;color:var(--mute)}
+
+footer{margin-top:56px;color:var(--faint);font-size:.75rem;letter-spacing:.02em}
+kbd{font:inherit;border:1px solid var(--line);border-radius:5px;padding:1px 6px;color:var(--mute)}
+
+/* motion */
+@keyframes rise{from{opacity:0;transform:translateY(18px);filter:blur(6px)}to{opacity:1;transform:none;filter:blur(0)}}
+.enter{animation:rise .75s var(--ease) both;animation-delay:var(--d,0ms)}
+@media (prefers-reduced-motion:reduce){
+  *{animation:none!important;transition:none!important}
+  html{scroll-behavior:auto}
 }
-.clear:hover{color:var(--ink)}
-.clear.show{display:block}
-.status{margin:10px 0 0;color:var(--muted);font-size:.8rem;min-height:1.2em}
-.list{margin-top:4px}
-.card{padding:20px 0;border-bottom:1px solid var(--line)}
-.card:last-child{border-bottom:0}
-.title{font-weight:600;font-size:1rem;margin:0 0 12px}
-.label{font-size:.68rem;font-weight:500;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin:14px 0 7px}
-.chips{display:flex;flex-wrap:wrap;gap:6px}
-.chip{
-  font:inherit;font-size:.85rem;cursor:pointer;color:var(--ink);background:#fff;
-  border:1px solid var(--line2);border-radius:6px;padding:3px 10px;
-}
-.chip:hover{border-color:var(--ink)}
-.chip.hit{border-color:var(--ink);background:#f6f6f6}
-.alum{
-  display:block;width:100%;text-align:left;font:inherit;font-size:.85rem;cursor:pointer;
-  border:0;background:none;color:#555;padding:3px 0;
-}
-.alum:hover{color:var(--ink);text-decoration:underline}
-.none{color:var(--muted);font-size:.85rem}
-.tag{display:block;font-size:.68rem;font-weight:500;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:6px}
-mark{background:var(--mark);color:inherit;border-radius:2px;padding:0}
-.empty{text-align:center;color:var(--muted);padding:56px 10px;font-size:.9rem}
-.empty b{display:block;color:var(--ink);font-weight:600;font-size:1rem;margin-bottom:4px}
-footer{margin-top:32px;text-align:center;color:#b0b0b0;font-size:.75rem}
-kbd{font:inherit;font-size:.7rem;border:1px solid var(--line2);border-radius:4px;padding:0 5px}
+@media (max-width:520px){ .bar .count{display:none} }
 </style>
 </head>
 <body>
 <div class="wrap">
-  <header>
-    <h1>SBP Team Directory</h1>
-    <p class="sub" id="counts"></p>
-  </header>
-
-  <div class="searchbar">
-    <div class="field">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
-      <input id="q" type="search" placeholder="Search a team, school or alumni name" autocomplete="off" autocapitalize="off" spellcheck="false" enterkeyhint="search" autofocus>
-      <button class="clear" id="clear" aria-label="Clear search">&times;</button>
-    </div>
-    <div class="status" id="status"></div>
+  <div class="bar">
+    <div class="mark"><i></i>SBP Teams</div>
+    <div class="count" id="counts"></div>
   </div>
 
+  <section class="hero" aria-hidden="false">
+    <h1>Find any team,<br><span>school or alumni.</span></h1>
+  </section>
+
+  <div class="search">
+    <div class="field">
+      <input id="q" type="search" placeholder="Start typing…" autocomplete="off" autocapitalize="off" spellcheck="false" enterkeyhint="search" aria-label="Search teams, schools or alumni" autofocus>
+      <button class="clear" id="clear" aria-label="Clear search">&times;</button>
+    </div>
+    <div class="rule"></div>
+  </div>
+
+  <div class="meta"><span id="status"></span><button class="link" id="browse">Browse all</button></div>
+  <div class="try" id="try"></div>
+
   <main class="list" id="list"></main>
-  <footer>Tap any name to search it &middot; press <kbd>/</kbd> to jump to search</footer>
+  <footer>Tap any name to search it &nbsp;·&nbsp; <kbd>/</kbd> to search &nbsp;·&nbsp; <kbd>esc</kbd> to clear</footer>
 </div>
 
 <script>
@@ -97,7 +161,8 @@ const records = [
   ...DATA.schools.map(s => ({kind:'school', title:s.school, code:s.code, teams:s.teams, alumni:s.alumni})),
   ...DATA.alumniOnly.map(a => ({kind:'alumni', title:a.alumni, code:a.short, teams:[], alumni:[]}))
 ];
-records.forEach(r => {
+records.forEach((r,i) => {
+  r.id = i;
   r.entries = [
     {t:'school', text:r.title, w:r.kind==='school'?88:96},
     ...(r.code ? [{t:'code', text:r.code, w:100}] : []),
@@ -131,8 +196,7 @@ function highlighter(q){
   const qc = norm(q), qw = words(q);
   if(!qc) return t => esc(t);
   const pat = s => [...s].map(reEsc).join('[^a-z0-9]*');
-  const parts = [pat(qc), ...qw.map(pat)];
-  const re = new RegExp(parts.join('|'), 'gi');
+  const re = new RegExp([pat(qc), ...qw.map(pat)].join('|'), 'gi');
   return t => {
     let out = '', last = 0, m;
     re.lastIndex = 0;
@@ -144,65 +208,100 @@ function highlighter(q){
   };
 }
 
-function card(r, hl, qc, isTop){
-  const isHit = txt => qc && norm(txt).includes(qc);
-  let h = `<article class="card${isTop?' top':''}">`;
+// "SM Sains Hulu Selangor (SEMASHUR)" -> name + faded code
+function titleHTML(t, hl){
+  const m = t.match(/^(.*?)\s*(\([^()]*\))\s*$/);
+  if(!m) return hl(t);
+  return hl(m[1]) + ' <span class="code">' + hl(m[2]) + '</span>';
+}
+
+function card(r, hl, isTop, enter, delay){
+  const cls = 'res' + (isTop ? ' top' : '') + (enter ? ' enter' : '');
+  const st = enter ? ` style="--d:${delay}ms"` : '';
+  let h = `<article class="${cls}"${st}>`;
   if(r.kind === 'alumni'){
-    h += `<span class="tag">Alumni group</span>`;
-    h += `<h2 class="title">${hl(r.title)}</h2>`;
-    h += `<div class="none">Not linked to a school in your sheet yet.</div>`;
+    h += `<span class="kicker">Alumni group</span><h2 class="name">${titleHTML(r.title, hl)}</h2>`;
+    h += `<div class="note">Not linked to a school in the sheet yet.</div>`;
   } else {
-    h += `<h2 class="title">${hl(r.title)}</h2>`;
-    h += `<div class="label">Team names</div>`;
-    if(r.teams.length){
-      h += `<div class="chips">` + r.teams.map(t =>
-        `<button class="chip${isHit(t)?' hit':''}" data-q="${esc(t)}">${hl(t)}</button>`).join('') + `</div>`;
-    } else {
-      h += `<div class="none">No team names recorded</div>`;
-    }
+    h += `<h2 class="name">${titleHTML(r.title, hl)}</h2>`;
+    h += `<div class="teams">` + (r.teams.length
+      ? r.teams.map(t => `<button data-q="${esc(t)}">${hl(t)}</button>`).join('')
+      : `<span class="none">No team names yet</span>`) + `</div>`;
     if(r.alumni.length){
-      h += `<div class="label">Alumni</div>` + r.alumni.map(a =>
-        `<button class="alum" data-q="${esc(a)}">${hl(a)}</button>`).join('');
+      h += `<div class="alumni"><small>Alumni</small>` +
+        r.alumni.map(a => `<button data-q="${esc(a)}">${hl(a)}</button>`).join('') + `</div>`;
     }
   }
   return h + `</article>`;
 }
 
 const $q = document.getElementById('q'), $list = document.getElementById('list'),
-      $status = document.getElementById('status'), $clear = document.getElementById('clear');
+      $status = document.getElementById('status'), $clear = document.getElementById('clear'),
+      $browse = document.getElementById('browse'), $try = document.getElementById('try');
+
+let browsing = false;
+let shown = new Set();   // record ids currently on screen, so only NEW results fade in
+
+// a few random single-word team names as starting points
+(function(){
+  const pool = DATA.schools.flatMap(s => s.teams).filter(t => /^[A-Za-z0-9]{4,10}$/.test(t));
+  const pick = [...new Set(pool)].sort(() => Math.random() - .5).slice(0, 5);
+  $try.innerHTML = '<span>Try</span>' + pick.map(t => `<button data-q="${esc(t)}">${esc(t)}</button>`).join('');
+})();
 
 function render(){
   const q = $q.value.trim();
-  $clear.classList.toggle('show', !!$q.value);
   const qc = norm(q), qw = words(q);
-  let rows;
-  if(!qc){
-    rows = [...records].sort((a,b) => (a.kind===b.kind ? 0 : a.kind==='school' ? -1 : 1) || a.title.localeCompare(b.title));
-    $status.textContent = 'Showing everything, A–Z';
-  } else {
+  const hasQ = !!qc;
+  document.body.classList.toggle('q', hasQ);
+  document.body.classList.toggle('browse', !hasQ && browsing);
+  $clear.classList.toggle('show', !!$q.value);
+  $list.classList.toggle('compact', !hasQ && browsing);
+  $browse.textContent = browsing && !hasQ ? 'Hide list' : 'Browse all';
+  $browse.style.display = hasQ ? 'none' : '';
+
+  let rows = [];
+  if(hasQ){
     rows = records.map(r => ({r, s:score(r, qc, qw)})).filter(x => x.s > 0)
       .sort((a,b) => b.s - a.s || a.r.title.localeCompare(b.r.title)).map(x => x.r);
-    $status.textContent = rows.length ? `${rows.length} match${rows.length>1?'es':''}` : '';
+    $status.innerHTML = rows.length ? `<b>${rows.length}</b> result${rows.length>1?'s':''}` : '';
+  } else if(browsing){
+    rows = [...records].sort((a,b) => (a.kind===b.kind ? 0 : a.kind==='school' ? -1 : 1) || a.title.localeCompare(b.title));
+    $status.innerHTML = `<b>${rows.length}</b> in total, A–Z`;
+  } else {
+    $status.textContent = '';
   }
-  if(!rows.length){
-    $list.innerHTML = `<div class="empty"><b>No match for “${esc(q)}”</b>Try a shorter bit of the name, or the school code.</div>`;
-    return;
+
+  if(hasQ && !rows.length){
+    $list.innerHTML = `<div class="empty enter"><h2>No match for<br><span>“${esc(q)}”</span></h2><p>Try a shorter part of the name, or the school code.</p></div>`;
+    shown = new Set();
+  } else {
+    const hl = highlighter(q);
+    let n = 0;
+    $list.innerHTML = rows.map((r,i) => {
+      const fresh = !shown.has(r.id);
+      return card(r, hl, hasQ && i === 0, fresh, fresh ? Math.min(n++, 7) * 70 : 0);
+    }).join('');
+    shown = new Set(rows.map(r => r.id));
   }
-  const hl = highlighter(q);
-  $list.innerHTML = rows.map((r,i) => card(r, hl, qc, !!qc && i===0)).join('');
   try{ history.replaceState(null,'', q ? '#q='+encodeURIComponent(q) : location.pathname + location.search); }catch(e){}
 }
 
+function setQuery(v, jump){
+  $q.value = v; render();
+  if(jump) window.scrollTo({top:0, behavior:'smooth'});
+}
+
 $q.addEventListener('input', render);
-$clear.addEventListener('click', () => { $q.value=''; render(); $q.focus(); });
-$list.addEventListener('click', e => {
+$clear.addEventListener('click', () => { setQuery(''); $q.focus(); });
+$browse.addEventListener('click', () => { browsing = !browsing; shown = new Set(); render(); });
+document.addEventListener('click', e => {
   const b = e.target.closest('[data-q]');
-  if(!b) return;
-  $q.value = b.dataset.q; render(); window.scrollTo({top:0,behavior:'smooth'});
+  if(b) setQuery(b.dataset.q, true);
 });
 document.addEventListener('keydown', e => {
   if(e.key === '/' && document.activeElement !== $q){ e.preventDefault(); $q.focus(); $q.select(); }
-  else if(e.key === 'Escape' && $q.value){ $q.value=''; render(); }
+  else if(e.key === 'Escape' && $q.value){ setQuery(''); }
 });
 
 const m = location.hash.match(/^#q=(.*)$/);

@@ -6,11 +6,10 @@ Single static page, no build step to view it: open `index.html`.
 
 ## Updating the data
 
-The source sheets are in `source/`. To rebuild after editing them:
+The source sheets are in `source/`. After editing them (or `source/template.html` for the design), rebuild with one command:
 
 ```
-cd source
-python3 build_data.py        # writes data.json
+python3 source/build.py
 ```
 
-then inject `data.json` into `template.html` (replace `/*__DATA__*/`) and save the result as `../index.html`.
+This regenerates `index.html`. Commit and push to `main` and Vercel redeploys automatically.
