@@ -612,16 +612,158 @@
    "alumni": [
     "Persatuan Alumni Sekolah Menengah Sains Sultan Mohamad Jiwa Sg Petani (ASSAK)"
    ]
+  },
+  {
+   "school": "Akademi Sains Pendang (ASP)",
+   "code": "ASP",
+   "teams": [
+    "ASP"
+   ],
+   "alumni": []
+  },
+  {
+   "school": "Sekolah Menengah Teknik Alor Setar (ASTECH)",
+   "code": "ASTECH",
+   "teams": [
+    "ASTECH"
+   ],
+   "alumni": []
+  },
+  {
+   "school": "Sekolah Menengah Teknik Tunku Abdul Rahman Putra, Georgetown (TITARP)",
+   "code": "TITARP",
+   "teams": [
+    "TITARP"
+   ],
+   "alumni": []
+  },
+  {
+   "school": "Sekolah Menengah Teknik Kuala Lumpur, Cheras (TIKL)",
+   "code": "TIKL",
+   "teams": [
+    "TIKL"
+   ],
+   "alumni": []
+  },
+  {
+   "school": "Sekolah Menengah Teknik Tuanku Jaafar, Seremban (TJTI)",
+   "code": "TJTI",
+   "teams": [
+    "TJTI"
+   ],
+   "alumni": []
+  },
+  {
+   "school": "Sekolah Menengah Sains Datuk Setia Abdul Ghani Ali, Alor Gajah (SAGA)",
+   "code": "SAGA",
+   "teams": [
+    "SAGA"
+   ],
+   "alumni": []
+  },
+  {
+   "school": "Sekolah Menengah Teknik Melaka, Bukit Piatu (TIMe)",
+   "code": "TIMe",
+   "teams": [
+    "TIMe"
+   ],
+   "alumni": []
+  },
+  {
+   "school": "Sekolah Menengah Sains Sembrong (SASEM)",
+   "code": "SASEM",
+   "teams": [
+    "SASEM"
+   ],
+   "alumni": []
+  },
+  {
+   "school": "Sekolah Menengah Teknik Johor Bahru (TIJB)",
+   "code": "TIJB",
+   "teams": [
+    "TIJB"
+   ],
+   "alumni": []
+  },
+  {
+   "school": "Sekolah Sains Sultan Haji Ahmad Shah Pekan (SHAH PEKAN)",
+   "code": "SHAH PEKAN",
+   "teams": [
+    "SHAH PEKAN"
+   ],
+   "alumni": []
+  },
+  {
+   "school": "Sekolah Berasrama Penuh Integrasi Temerloh (INSOFT)",
+   "code": "INSOFT",
+   "teams": [
+    "INSOFT"
+   ],
+   "alumni": [
+    "Persatuan Alumni SBP Integrasi Temerloh (AITEM)"
+   ]
+  },
+  {
+   "school": "Sekolah Menengah Teknik Kuantan (TI Kuantan)",
+   "code": "TI Kuantan",
+   "teams": [
+    "TI Kuantan"
+   ],
+   "alumni": []
+  },
+  {
+   "school": "Sekolah Menengah Teknik Terengganu, Kuala Terengganu (TEKTRA)",
+   "code": "TEKTRA",
+   "teams": [
+    "TEKTRA"
+   ],
+   "alumni": []
+  },
+  {
+   "school": "Sekolah Berasrama Penuh Integrasi Tanah Merah (INTERA)",
+   "code": "INTERA",
+   "teams": [
+    "INTERA"
+   ],
+   "alumni": []
+  },
+  {
+   "school": "Sekolah Menengah Teknik Sejingkat, Kuching (TI Sejingkat)",
+   "code": "TI Sejingkat",
+   "teams": [
+    "TI Sejingkat"
+   ],
+   "alumni": []
+  },
+  {
+   "school": "Sekolah Menengah Sains Labuan (SMEXCEL)",
+   "code": "SMEXCEL",
+   "teams": [
+    "SMEXCEL"
+   ],
+   "alumni": []
+  },
+  {
+   "school": "Sekolah Menengah Sains Sabah, Kota Kinabalu (SMESH)",
+   "code": "SMESH",
+   "teams": [
+    "SMESH"
+   ],
+   "alumni": []
+  },
+  {
+   "school": "Sekolah Menengah Sains Lahad Datu (SHIELD)",
+   "code": "SHIELD",
+   "teams": [
+    "SHIELD"
+   ],
+   "alumni": []
   }
  ],
  "alumniOnly": [
   {
    "alumni": "Persatuan Alumni Kolej Islam Klang Malaysia (ALKIS)",
    "short": "ALKIS"
-  },
-  {
-   "alumni": "Persatuan Alumni SBP Integrasi Temerloh (AITEM)",
-   "short": "AITEM"
   }
  ]
 }

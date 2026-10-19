@@ -70,7 +70,7 @@ for g, t in alumni_rows:
                 target = s; report.append(f"{t} -> {s['school']} (code in name)"); break
     # 4. manual links for alumni whose short name matches no team/code
     if not target:
-        manual = {"PRASASSTI": "SAKTI", "ANNADI": "SMAPK", "PASPP": "SCIPP"}
+        manual = {"PRASASSTI": "SAKTI", "ANNADI": "SMAPK", "PASPP": "SCIPP", "AITEM": "INSOFT"}
         want = manual.get(t.upper())
         if want:
             target = next((s for s in schools if s["code"].upper() == want), None)
