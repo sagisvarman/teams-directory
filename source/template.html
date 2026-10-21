@@ -49,7 +49,7 @@ input{
   padding:14px 44px 16px 0;-webkit-appearance:none;appearance:none;
 }
 input::placeholder{color:var(--faint);transition:color .3s}
-input:focus::placeholder{color:#e1e1e5}
+input.flying{color:transparent}
 input::-webkit-search-cancel-button{display:none}
 .rule{height:2px;background:var(--line);position:relative}
 .rule::after{content:"";position:absolute;inset:0;background:var(--ink);transform:scaleX(0);transform-origin:left;
@@ -60,6 +60,10 @@ input::-webkit-search-cancel-button{display:none}
   opacity:0;pointer-events:none;transition:opacity .25s,transform .35s var(--ease),background .2s}
 .clear.show{opacity:1;pointer-events:auto;transform:translateY(-50%) scale(1)}
 .clear:hover{background:#e4e4e8}
+
+/* a tapped name travels up into the search box */
+.flyer{position:fixed;left:0;top:0;z-index:50;margin:0;pointer-events:none;white-space:nowrap;
+  transform-origin:0 0;will-change:transform;font-weight:500;letter-spacing:-.04em}
 
 /* helper line */
 .meta{display:flex;justify-content:space-between;align-items:center;min-height:28px;margin-top:14px;font-size:.8rem;color:var(--mute)}
@@ -103,7 +107,10 @@ body.q .try-wrap,body.browse .try-wrap{grid-template-rows:0fr;opacity:0}
 .compact .alumni{display:none}
 
 /* highlight */
-mark{background:linear-gradient(transparent 58%,#ffe46b 58%);color:inherit;padding:0}
+mark{background:linear-gradient(transparent 58%,#ffe46b 58%) no-repeat 0 0/100% 100%;color:inherit;padding:0}
+/* the highlight wipes in left to right, only on cards that are fading in */
+.enter mark{animation:sweep .6s var(--ease) calc(var(--d,0ms) + 260ms) backwards}
+@keyframes sweep{from{background-size:0% 100%}}
 
 /* empty */
 .empty{padding:clamp(40px,10vh,90px) 0}
@@ -252,6 +259,70 @@ let shown = new Set();   // record ids currently on screen, so only NEW results 
   $try.innerHTML = '<span>Try</span>' + pick.map(t => `<button data-q="${esc(t)}">${esc(t)}</button>`).join('');
 })();
 
+const calm = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+// ---- typewriter placeholder: slowly types real team names while the box is empty ----
+let kickTypewriter = () => {};
+(function(){
+  if(calm) return;
+  const words = [...new Set(DATA.schools.flatMap(s => s.teams).filter(t => /^[A-Za-z0-9 ]{4,14}$/.test(t)))]
+    .sort(() => Math.random() - .5).slice(0, 8);
+  if(!words.length) return;
+  let w = 0, n = 0, phase = 'type', running = false, timer = 0;
+  const put = () => { $q.placeholder = 'Try ' + words[w].slice(0, n); };
+  function tick(){
+    if($q.value){ running = false; $q.placeholder = 'Start typing…'; return; }
+    if(document.hidden){ timer = setTimeout(tick, 500); return; }
+    let wait;
+    if(phase === 'type'){
+      n++; put();
+      if(n >= words[w].length){ phase = 'erase'; wait = 1800; } else wait = 70 + Math.random() * 60;
+    } else {
+      n--; put();
+      if(n <= 0){ phase = 'type'; w = (w + 1) % words.length; wait = 500; } else wait = 32;
+    }
+    timer = setTimeout(tick, wait);
+  }
+  kickTypewriter = () => {
+    if(running || $q.value) return;
+    running = true; clearTimeout(timer); phase = 'type'; n = 0;
+    timer = setTimeout(tick, 300);
+  };
+  kickTypewriter();
+})();
+
+// ---- tapped name flies into the search box (transform only, so it stays on the GPU) ----
+let flyer = null;
+function landFlyer(){
+  if(flyer){ flyer.remove(); flyer = null; }
+  $q.classList.remove('flying');
+}
+function flyToSearch(btn, value){
+  landFlyer();
+  const r = btn.getBoundingClientRect();
+  const heroH = document.body.classList.contains('q') ? 0 : document.querySelector('.hero').getBoundingClientRect().height;
+  const bs = getComputedStyle(btn), fb = parseFloat(bs.fontSize), c0 = bs.color;
+
+  setQuery(value, false);
+  try{ window.scrollTo({top:0, behavior:'instant'}); }catch(e){ window.scrollTo(0,0); }
+
+  const to = $q.getBoundingClientRect();           // hero is still full height here, so subtract it
+  const fi = parseFloat(getComputedStyle($q).fontSize), lh = r.height / fb;
+  const el = document.createElement('div');
+  el.className = 'flyer'; el.textContent = value;
+  el.style.cssText = `font-size:${fi}px;line-height:${lh}`;
+  document.body.appendChild(el);
+  $q.classList.add('flying');
+  flyer = el;
+
+  const ty = to.top - heroH + (to.height - 2) / 2 - fi * lh / 2 + 1;   // +1: matches the input's baseline
+  const a = el.animate([
+    {transform:`translate(${r.left}px,${r.top}px) scale(${fb / fi})`, color:c0},
+    {transform:`translate(${to.left}px,${ty}px) scale(1)`, color:'#0b0b0c'}
+  ], {duration:560, easing:'cubic-bezier(.2,.7,.2,1)', fill:'both'});
+  a.onfinish = a.oncancel = () => { if(flyer === el) landFlyer(); };
+}
+
 function render(){
   const q = $q.value.trim();
   const qc = norm(q), qw = words(q);
@@ -290,6 +361,7 @@ function render(){
     }).join('');
     shown = new Set(rows.map(r => r.id));
   }
+  if(!$q.value) kickTypewriter();
   syncHash();
 }
 
@@ -320,7 +392,10 @@ $clear.addEventListener('click', () => { setQuery(''); $q.focus(); });
 $browse.addEventListener('click', () => { browsing = !browsing; shown = new Set(); render(); });
 document.addEventListener('click', e => {
   const b = e.target.closest('[data-q]');
-  if(b) setQuery(b.dataset.q, true);
+  if(!b) return;
+  const v = b.dataset.q;
+  if(!calm && v.length <= 16 && b.animate) flyToSearch(b, v);   // long alumni names just jump
+  else setQuery(v, true);
 });
 document.addEventListener('keydown', e => {
   if(e.key === '/' && document.activeElement !== $q){ e.preventDefault(); $q.focus(); $q.select(); }
