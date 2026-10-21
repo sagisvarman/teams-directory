@@ -43,13 +43,20 @@ body.q .hero{grid-template-rows:0fr;opacity:0}
 .search{position:sticky;top:0;z-index:10;padding:10px 0 0;
   background:rgba(255,255,255,.96);will-change:transform}
 .field{position:relative}
+/* what you type is drawn here, letter by letter; the real <input> underneath keeps caret, selection and paste */
+.type{position:absolute;left:0;right:44px;top:0;bottom:0;overflow:hidden;pointer-events:none}
+.type-in{white-space:pre;padding:14px 0 16px;color:var(--ink);will-change:transform;
+  font:inherit;font-weight:500;font-size:clamp(1.55rem,5.4vw,2.6rem);letter-spacing:-.04em;font-kerning:none}
+.ch{display:inline-block;white-space:pre}
+.ch.in{animation:glyph .5s var(--ease) calc(var(--i,0) * 18ms) backwards}
+input::selection{background:#ececef}
 input{
-  width:100%;border:0;outline:0;background:transparent;border-radius:0;color:var(--ink);
-  font:inherit;font-weight:500;font-size:clamp(1.55rem,5.4vw,2.6rem);letter-spacing:-.04em;
+  width:100%;border:0;outline:0;background:transparent;border-radius:0;color:transparent;caret-color:var(--ink);
+  font:inherit;font-weight:500;font-size:clamp(1.55rem,5.4vw,2.6rem);letter-spacing:-.04em;font-kerning:none;
   padding:14px 44px 16px 0;-webkit-appearance:none;appearance:none;
 }
 input::placeholder{color:var(--faint);transition:color .3s}
-input.flying{color:transparent}
+input.flying + .type{visibility:hidden}
 input::-webkit-search-cancel-button{display:none}
 .rule{height:2px;background:var(--line);position:relative}
 .rule::after{content:"";position:absolute;inset:0;background:var(--ink);transform:scaleX(0);transform-origin:left;
@@ -63,7 +70,7 @@ input::-webkit-search-cancel-button{display:none}
 
 /* a tapped name travels up into the search box */
 .flyer{position:fixed;left:0;top:0;z-index:50;margin:0;pointer-events:none;white-space:nowrap;
-  transform-origin:0 0;will-change:transform;font-weight:500;letter-spacing:-.04em}
+  transform-origin:0 0;will-change:transform;font-weight:500;letter-spacing:-.04em;font-kerning:none}
 
 /* helper line */
 .meta{display:flex;justify-content:space-between;align-items:center;min-height:28px;margin-top:14px;font-size:.8rem;color:var(--mute)}
@@ -109,7 +116,7 @@ body.q .try-wrap,body.browse .try-wrap{grid-template-rows:0fr;opacity:0}
 /* highlight */
 mark{background:linear-gradient(transparent 58%,#ffe46b 58%) no-repeat 0 0/100% 100%;color:inherit;padding:0}
 /* the highlight wipes in left to right, only on cards that are fading in */
-.enter mark{animation:sweep .6s var(--ease) calc(var(--d,0ms) + 260ms) backwards}
+.enter mark{animation:sweep .6s var(--ease) calc(var(--d,0ms) + 420ms) backwards}
 @keyframes sweep{from{background-size:0% 100%}}
 
 /* empty */
@@ -122,8 +129,18 @@ footer{margin-top:56px;color:var(--faint);font-size:.75rem;letter-spacing:.02em}
 kbd{font:inherit;border:1px solid var(--line);border-radius:5px;padding:1px 6px;color:var(--mute)}
 
 /* motion */
-@keyframes rise{from{opacity:0;transform:translate3d(0,18px,0)}to{opacity:1;transform:none}}
-.enter{animation:rise .6s var(--ease) both;animation-delay:var(--d,0ms)}
+/* Every keyframe only defines `from`, so with reduced motion (animations off) everything simply shows. */
+@keyframes fade{from{opacity:0}}
+@keyframes rise{from{opacity:0;transform:translate3d(0,10px,0)}}
+@keyframes glyph{from{opacity:0;transform:translate3d(0,.45em,0)}}
+@keyframes wordUp{from{transform:translate3d(0,135%,0)}}
+.enter{animation:fade .5s ease var(--d,0ms) backwards}
+.enter .alumni,.enter .note,.enter .kicker,.empty.enter h2,.empty.enter p{animation:rise .7s var(--ease) calc(var(--d,0ms) + 320ms) backwards}
+/* school names: each word slides up out of a clipped line */
+.w{display:inline-block;clip-path:inset(-.2em -.3em -.18em -.3em)}
+.wi{display:inline-block;animation:wordUp .75s var(--ease) calc(var(--d,0ms) + var(--i,0) * 45ms) backwards}
+/* team names: letters rise one after another */
+.g{display:inline-block;animation:glyph .55s var(--ease) calc(var(--d,0ms) + 140ms + var(--i,0) * 14ms) backwards}
 @media (prefers-reduced-motion:reduce){
   *{animation:none!important;transition:none!important}
   html{scroll-behavior:auto}
@@ -145,6 +162,7 @@ kbd{font:inherit;border:1px solid var(--line);border-radius:5px;padding:1px 6px;
   <div class="search">
     <div class="field">
       <input id="q" type="search" placeholder="Start typing…" autocomplete="off" autocapitalize="off" spellcheck="false" enterkeyhint="search" aria-label="Search teams, schools or alumni" autofocus>
+      <div class="type" aria-hidden="true"><div class="type-in" id="typeIn"></div></div>
       <button class="clear" id="clear" aria-label="Clear search">&times;</button>
     </div>
     <div class="rule"></div>
@@ -219,10 +237,40 @@ function highlighter(q){
 }
 
 // "SM Sains Hulu Selangor (SEMASHUR)" -> name + faded code
-function titleHTML(t, hl){
+function titleHTML(t, hl, anim){
+  const ctr = {i:0};   // one running word index, so the stagger continues into the faded code
+  const w = h => anim ? splitWords(h, ctr) : h;
   const m = t.match(/^(.*?)\s*(\([^()]*\))\s*$/);
-  if(!m) return hl(t);
-  return hl(m[1]) + ' <span class="code">' + hl(m[2]) + '</span>';
+  if(!m) return w(hl(t));
+  return w(hl(m[1])) + ' <span class="code">' + w(hl(m[2])) + '</span>';
+}
+
+// Wrap each word of already-highlighted HTML so it can slide up out of a clipped line.
+// A <mark> that spans several words is closed and re-opened around each one.
+function splitWords(html, ctr){
+  let out = '', buf = '', inMark = false;
+  const flush = () => {
+    if(buf.replace(/<\/?mark>/g, '')) out += `<span class="w"><span class="wi" style="--i:${ctr.i++}">${buf}</span></span>`;
+    buf = '';
+  };
+  for(const t of html.match(/<\/?mark>|\s+|[^<\s]+/g) || []){
+    if(t === '<mark>'){ inMark = true; buf += t; }
+    else if(t === '</mark>'){ inMark = false; buf += t; }
+    else if(/^\s+$/.test(t)){ if(inMark) buf += '</mark>'; flush(); out += ' '; if(inMark) buf = '<mark>'; }
+    else buf += t;
+  }
+  flush();
+  return out;
+}
+
+// Same idea per letter, for team names (stagger is capped so long names stay quick).
+function splitLetters(html){
+  let out = '', i = 0;
+  for(const t of html.match(/<\/?mark>|&[a-z#0-9]+;|[\s\S]/g) || []){
+    if(t[0] === '<' || t === ' ') out += t;
+    else out += `<span class="g" style="--i:${Math.min(i++, 18)}">${t}</span>`;
+  }
+  return out;
 }
 
 function card(r, hl, isTop, enter, delay){
@@ -230,12 +278,12 @@ function card(r, hl, isTop, enter, delay){
   const st = enter ? ` style="--d:${delay}ms"` : '';
   let h = `<article class="${cls}"${st}>`;
   if(r.kind === 'alumni'){
-    h += `<span class="kicker">Alumni group</span><h2 class="name">${titleHTML(r.title, hl)}</h2>`;
+    h += `<span class="kicker">Alumni group</span><h2 class="name">${titleHTML(r.title, hl, enter)}</h2>`;
     h += `<div class="note">Not linked to a school in the sheet yet.</div>`;
   } else {
-    h += `<h2 class="name">${titleHTML(r.title, hl)}</h2>`;
+    h += `<h2 class="name">${titleHTML(r.title, hl, enter)}</h2>`;
     h += `<div class="teams">` + (r.teams.length
-      ? r.teams.map(t => `<button data-q="${esc(t)}">${hl(t)}</button>`).join('')
+      ? r.teams.map(t => `<button data-q="${esc(t)}">${enter ? splitLetters(hl(t)) : hl(t)}</button>`).join('')
       : `<span class="none">No team names yet</span>`) + `</div>`;
     if(r.alumni.length){
       h += `<div class="alumni"><small>Alumni</small>` +
@@ -323,6 +371,30 @@ function flyToSearch(btn, value){
   a.onfinish = a.oncancel = () => { if(flyer === el) landFlyer(); };
 }
 
+// ---- the search box types letter by letter ----
+const $type = document.getElementById('typeIn');
+let typed = [];
+function syncTypeScroll(){ $type.style.transform = `translate3d(${-$q.scrollLeft}px,0,0)`; }
+function paintType(animate){
+  const next = Array.from($q.value);
+  let k = 0;
+  while(k < next.length && k < typed.length && next[k] === typed[k]) k++;      // keep letters that didn't change
+  while($type.childNodes.length > k) $type.lastChild.remove();
+  const anim = animate && !calm;
+  for(let i = k; i < next.length; i++){
+    const s = document.createElement('span');
+    s.className = anim ? 'ch in' : 'ch';
+    s.textContent = next[i];
+    if(anim) s.style.setProperty('--i', Math.min(i - k, 10));   // a paste ripples in
+    $type.appendChild(s);
+  }
+  typed = next;
+  syncTypeScroll();
+}
+const followCaret = () => requestAnimationFrame(syncTypeScroll);
+['keyup','click','select','focus','mouseup','touchend'].forEach(ev => $q.addEventListener(ev, followCaret));
+addEventListener('resize', followCaret);
+
 function render(){
   const q = $q.value.trim();
   const qc = norm(q), qw = words(q);
@@ -383,11 +455,11 @@ function schedule(){
 }
 
 function setQuery(v, jump){
-  $q.value = v; render();
+  $q.value = v; paintType(false); render();
   if(jump) window.scrollTo({top:0, behavior:'smooth'});
 }
 
-$q.addEventListener('input', schedule);
+$q.addEventListener('input', () => { paintType(true); followCaret(); schedule(); });
 $clear.addEventListener('click', () => { setQuery(''); $q.focus(); });
 $browse.addEventListener('click', () => { browsing = !browsing; shown = new Set(); render(); });
 document.addEventListener('click', e => {
@@ -404,6 +476,7 @@ document.addEventListener('keydown', e => {
 
 const m = location.hash.match(/^#q=(.*)$/);
 if(m){ try{ $q.value = decodeURIComponent(m[1]); }catch(e){} }
+paintType(false);
 render();
 </script>
 </body>
