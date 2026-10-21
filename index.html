@@ -22,7 +22,7 @@ body{
   padding:0 clamp(20px,5vw,48px) calc(80px + env(safe-area-inset-bottom));
 }
 .wrap{max-width:900px;margin:0 auto}
-button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:pointer;text-align:left}
+button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:pointer;text-align:left;touch-action:manipulation}
 
 /* top bar */
 .bar{display:flex;justify-content:space-between;align-items:center;padding:calc(22px + env(safe-area-inset-top)) 0 0;
@@ -31,15 +31,17 @@ button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:poin
 .mark i{width:8px;height:8px;border-radius:50%;background:var(--ink);display:block}
 
 /* hero (collapses once you type) */
-.hero{overflow:hidden;max-height:420px;opacity:1;
-  transition:max-height .7s var(--ease),opacity .45s ease,margin .7s var(--ease);margin:clamp(40px,12vh,110px) 0 clamp(20px,4vh,40px)}
+.hero{display:grid;grid-template-rows:1fr;margin-top:22px;opacity:1;
+  transition:grid-template-rows .6s var(--ease),opacity .4s ease}
+.hero-clip{overflow:hidden;min-height:0}
+.hero-in{padding:calc(clamp(40px,12vh,110px) - 22px) 0 clamp(20px,4vh,40px)}
 .hero h1{margin:0;font-size:clamp(2.6rem,9.5vw,5.2rem);line-height:1;font-weight:650;letter-spacing:-.055em}
 .hero h1 span{color:var(--faint)}
-body.q .hero{max-height:0;opacity:0;margin-top:22px;margin-bottom:0}
+body.q .hero{grid-template-rows:0fr;opacity:0}
 
 /* search */
 .search{position:sticky;top:0;z-index:10;padding:10px 0 0;
-  background:rgba(255,255,255,.86);-webkit-backdrop-filter:saturate(1.6) blur(14px);backdrop-filter:saturate(1.6) blur(14px)}
+  background:rgba(255,255,255,.96);will-change:transform}
 .field{position:relative}
 input{
   width:100%;border:0;outline:0;background:transparent;border-radius:0;color:var(--ink);
@@ -66,9 +68,10 @@ input::-webkit-search-cancel-button{display:none}
 .link:hover{color:var(--ink);text-decoration-color:var(--ink)}
 
 /* suggestions */
-.try{display:flex;flex-wrap:wrap;gap:6px 18px;align-items:baseline;margin-top:10px;font-size:1rem;color:var(--mute);
-  transition:opacity .4s,max-height .5s var(--ease);max-height:120px;overflow:hidden}
-body.q .try,body.browse .try{opacity:0;max-height:0;margin-top:0}
+.try-wrap{display:grid;grid-template-rows:1fr;transition:grid-template-rows .5s var(--ease),opacity .35s ease}
+.try-clip{overflow:hidden;min-height:0}
+.try{display:flex;flex-wrap:wrap;gap:6px 18px;align-items:baseline;padding-top:10px;font-size:1rem;color:var(--mute)}
+body.q .try-wrap,body.browse .try-wrap{grid-template-rows:0fr;opacity:0}
 .try button{color:var(--ink);font-weight:500;letter-spacing:-.02em;transition:opacity .2s}
 .try button:hover{opacity:.45}
 
@@ -94,7 +97,7 @@ body.q .try,body.browse .try{opacity:0;max-height:0;margin-top:0}
 .note{margin-top:12px;color:var(--mute);font-size:.9rem}
 
 /* compact list (browse all) */
-.compact .res{padding:14px 0}
+.compact .res{padding:14px 0;content-visibility:auto;contain-intrinsic-size:auto 64px}
 .compact .name{font-size:clamp(1.15rem,3.6vw,1.5rem);letter-spacing:-.035em}
 .compact .teams{margin-top:4px;font-size:.95rem;color:var(--mute)}
 .compact .alumni{display:none}
@@ -112,8 +115,8 @@ footer{margin-top:56px;color:var(--faint);font-size:.75rem;letter-spacing:.02em}
 kbd{font:inherit;border:1px solid var(--line);border-radius:5px;padding:1px 6px;color:var(--mute)}
 
 /* motion */
-@keyframes rise{from{opacity:0;transform:translateY(18px);filter:blur(6px)}to{opacity:1;transform:none;filter:blur(0)}}
-.enter{animation:rise .75s var(--ease) both;animation-delay:var(--d,0ms)}
+@keyframes rise{from{opacity:0;transform:translate3d(0,18px,0)}to{opacity:1;transform:none}}
+.enter{animation:rise .6s var(--ease) both;animation-delay:var(--d,0ms)}
 @media (prefers-reduced-motion:reduce){
   *{animation:none!important;transition:none!important}
   html{scroll-behavior:auto}
@@ -128,9 +131,9 @@ kbd{font:inherit;border:1px solid var(--line);border-radius:5px;padding:1px 6px;
     <div class="count" id="counts"></div>
   </div>
 
-  <section class="hero" aria-hidden="false">
+  <section class="hero" aria-hidden="false"><div class="hero-clip"><div class="hero-in">
     <h1>Find any team,<br><span>school or alumni.</span></h1>
-  </section>
+  </div></div></section>
 
   <div class="search">
     <div class="field">
@@ -141,7 +144,7 @@ kbd{font:inherit;border:1px solid var(--line);border-radius:5px;padding:1px 6px;
   </div>
 
   <div class="meta"><span id="status"></span><button class="link" id="browse">Browse all</button></div>
-  <div class="try" id="try"></div>
+  <div class="try-wrap"><div class="try-clip"><div class="try" id="try"></div></div></div>
 
   <main class="list" id="list"></main>
   <footer>Tap any name to search it &nbsp;·&nbsp; <kbd>/</kbd> to search &nbsp;·&nbsp; <kbd>esc</kbd> to clear</footer>
@@ -183,7 +186,7 @@ function score(r, qc, qw){
   for(const e of r.entries){
     let s = 0;
     if(e.n === qc) s = 100;
-    else if(e.words.some(w => norm(w).startsWith(qc)) || e.n.startsWith(qc)) s = 75;
+    else if(e.words.some(w => w.startsWith(qc)) || e.n.startsWith(qc)) s = 75;
     else if(e.n.includes(qc)) s = 55;
     else if(qw.length > 1 && qw.every(w => e.n.includes(w))) s = 45;
     if(s) best = Math.max(best, s * e.w / 100);
@@ -277,14 +280,34 @@ function render(){
     shown = new Set();
   } else {
     const hl = highlighter(q);
-    let n = 0;
+    let n = 0;   // only the first 12 new cards animate; the rest are off-screen anyway
     $list.innerHTML = rows.map((r,i) => {
       const fresh = !shown.has(r.id);
-      return card(r, hl, hasQ && i === 0, fresh, fresh ? Math.min(n++, 7) * 70 : 0);
+      const animate = fresh && n < 12;
+      const delay = animate ? Math.min(n, 7) * 70 : 0;
+      if(fresh) n++;
+      return card(r, hl, hasQ && i === 0, animate, delay);
     }).join('');
     shown = new Set(rows.map(r => r.id));
   }
-  try{ history.replaceState(null,'', q ? '#q='+encodeURIComponent(q) : location.pathname + location.search); }catch(e){}
+  syncHash();
+}
+
+// URL hash updates are debounced so typing never waits on history.replaceState
+let hashTimer = 0;
+function syncHash(){
+  clearTimeout(hashTimer);
+  hashTimer = setTimeout(() => {
+    const q = $q.value.trim();
+    try{ history.replaceState(null,'', q ? '#q='+encodeURIComponent(q) : location.pathname + location.search); }catch(e){}
+  }, 250);
+}
+
+// at most one render per frame, however fast the keys come in
+let frame = 0;
+function schedule(){
+  if(frame) return;
+  frame = requestAnimationFrame(() => { frame = 0; render(); });
 }
 
 function setQuery(v, jump){
@@ -292,7 +315,7 @@ function setQuery(v, jump){
   if(jump) window.scrollTo({top:0, behavior:'smooth'});
 }
 
-$q.addEventListener('input', render);
+$q.addEventListener('input', schedule);
 $clear.addEventListener('click', () => { setQuery(''); $q.focus(); });
 $browse.addEventListener('click', () => { browsing = !browsing; shown = new Set(); render(); });
 document.addEventListener('click', e => {
