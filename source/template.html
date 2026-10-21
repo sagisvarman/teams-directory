@@ -45,10 +45,13 @@ body.q .hero{grid-template-rows:0fr;opacity:0}
 .field{position:relative}
 /* what you type is drawn here, letter by letter; the real <input> underneath keeps caret, selection and paste */
 .type{position:absolute;left:0;right:44px;top:0;bottom:0;overflow:hidden;pointer-events:none}
-.type-in{white-space:pre;padding:14px 0 16px;color:var(--ink);will-change:transform;
+.type-in{position:relative;white-space:pre;padding:14px 0 16px;color:var(--ink);will-change:transform;
   font:inherit;font-weight:500;font-size:clamp(1.55rem,5.4vw,2.6rem);letter-spacing:-.04em;font-kerning:none}
 .ch{display:inline-block;white-space:pre}
 .ch.in{animation:glyph .5s var(--ease) calc(var(--i,0) * 18ms) backwards}
+/* a deleted letter is taken out of the flow, stays put, and sinks away (rightmost goes first) */
+.ch.out{position:absolute;pointer-events:none;animation:glyphOut .26s var(--ease) calc(var(--o,0) * 14ms) forwards}
+@keyframes glyphOut{to{opacity:0;transform:translate3d(0,.4em,0)}}
 input::selection{background:#ececef}
 input{
   width:100%;border:0;outline:0;background:transparent;border-radius:0;color:transparent;caret-color:var(--ink);
@@ -373,20 +376,34 @@ function flyToSearch(btn, value){
 
 // ---- the search box types letter by letter ----
 const $type = document.getElementById('typeIn');
-let typed = [];
+let typed = [], live = [];
 function syncTypeScroll(){ $type.style.transform = `translate3d(${-$q.scrollLeft}px,0,0)`; }
-function paintType(animate){
+
+// Deleted letters don't just vanish: each is lifted out of the flow where it stands, then sinks and fades.
+function dropLetters(gone, quiet){
+  if(!gone.length) return;
+  if(calm || quiet){ gone.forEach(s => s.remove()); return; }
+  const pos = gone.map(s => [s.offsetLeft, s.offsetTop]);      // measure everything first...
+  gone.forEach((s, j) => {                                      // ...then write
+    s.className = 'ch out';
+    s.style.cssText = `left:${pos[j][0]}px;top:${pos[j][1]}px;--o:${Math.min(gone.length - 1 - j, 10)}`;
+    s.addEventListener('animationend', () => s.remove(), {once:true});
+    setTimeout(() => s.remove(), 700);                          // safety net
+  });
+}
+
+function paintType(animate, composing){
   const next = Array.from($q.value);
   let k = 0;
   while(k < next.length && k < typed.length && next[k] === typed[k]) k++;      // keep letters that didn't change
-  while($type.childNodes.length > k) $type.lastChild.remove();
+  dropLetters(live.splice(k), composing);
   const anim = animate && !calm;
   for(let i = k; i < next.length; i++){
     const s = document.createElement('span');
     s.className = anim ? 'ch in' : 'ch';
     s.textContent = next[i];
     if(anim) s.style.setProperty('--i', Math.min(i - k, 10));   // a paste ripples in
-    $type.appendChild(s);
+    $type.appendChild(s); live.push(s);
   }
   typed = next;
   syncTypeScroll();
@@ -459,7 +476,7 @@ function setQuery(v, jump){
   if(jump) window.scrollTo({top:0, behavior:'smooth'});
 }
 
-$q.addEventListener('input', () => { paintType(true); followCaret(); schedule(); });
+$q.addEventListener('input', e => { paintType(true, e.isComposing); followCaret(); schedule(); });
 $clear.addEventListener('click', () => { setQuery(''); $q.focus(); });
 $browse.addEventListener('click', () => { browsing = !browsing; shown = new Set(); render(); });
 document.addEventListener('click', e => {
